@@ -46,4 +46,132 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-widest text-indigo-400 mb-2">Size (Ratio)</label>
-                        <select id="ratioSelect"
+                        <select id="ratioSelect" class="w-full bg-black p-3 rounded-xl border border-gray-800 outline-none">
+                            <option value="1024/1024">Square (1:1)</option>
+                            <option value="1024/1792">Portrait (9:16)</option>
+                            <option value="1792/1024">Landscape (16:9)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="generateImage()" id="genBtn"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 font-bold py-5 rounded-2xl shadow-lg transition-all active:scale-95 text-xl">
+                    Generate Magic
+                </button>
+            </div>
+        </section>
+
+        <section class="flex flex-col items-center justify-center glass rounded-3xl p-4 min-h-[400px] relative overflow-hidden">
+            <div id="loader" class="loader hidden ease-linear rounded-full border-4 border-t-4 border-gray-800 h-16 w-16 mb-4 z-10"></div>
+            <img id="generatedImg" src="" alt="" class="rounded-2xl shadow-2xl max-w-full h-auto z-10 hidden border border-gray-800">
+            <div id="placeholderText" class="text-gray-700 font-medium">Your creation will appear here</div>
+            
+            <div id="actionBtns" class="mt-6 flex gap-4 hidden z-10">
+                <button onclick="downloadImg()" class="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-xl font-bold transition">Download</button>
+                <button onclick="copyImgLink()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl font-bold transition">Copy Link</button>
+                <button onclick="shareImg()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl font-bold transition">Share</button>
+            </div>
+        </section>
+    </main>
+
+    <section class="max-w-6xl mx-auto mt-20">
+        <h2 class="text-2xl font-black mb-8 flex items-center gap-3">
+            <span class="w-8 h-1 bg-indigo-500 rounded-full"></span> 
+            RECENT CREATIONS
+        </h2>
+        <div id="historyGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+    </section>
+
+    <script>
+        window.onload = displayHistory;
+
+        function surpriseMe() {
+            const prompts = [
+                "A futuristic city with flying cars and neon lights",
+                "A cute baby dragon sitting on a pile of gold",
+                "An astronaut riding a horse in a galaxy of flowers",
+                "A giant turtle carrying a forest on its shell",
+                "Cyberpunk style street of Tokyo in rain",
+                "A mythical white tiger with blue fire wings"
+            ];
+            document.getElementById('promptInput').value = prompts[Math.floor(Math.random() * prompts.length)];
+        }
+
+        async function generateImage() {
+            const prompt = document.getElementById('promptInput').value;
+            const style = document.getElementById('styleSelect').value;
+            const ratio = document.getElementById('ratioSelect').value.split('/');
+            if (!prompt) return alert("Please enter a prompt!");
+
+            const btn = document.getElementById('genBtn');
+            const loader = document.getElementById('loader');
+            const img = document.getElementById('generatedImg');
+            const placeholder = document.getElementById('placeholderText');
+            const actionBtns = document.getElementById('actionBtns');
+
+            btn.innerText = "Generating...";
+            btn.disabled = true;
+            loader.classList.remove('hidden');
+            img.classList.add('hidden');
+            placeholder.classList.add('hidden');
+            actionBtns.classList.add('hidden');
+
+            const finalPrompt = `${prompt}, ${style}`;
+            const seed = Math.floor(Math.random() * 999999);
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPrompt)}?width=${ratio[0]}&height=${ratio[1]}&nologo=true&seed=${seed}`;
+
+            img.src = url;
+            img.onload = () => {
+                loader.classList.add('hidden');
+                img.classList.remove('hidden');
+                actionBtns.classList.remove('hidden');
+                btn.innerText = "Generate Magic";
+                btn.disabled = false;
+                saveToHistory(url, prompt);
+            };
+        }
+
+        function saveToHistory(url, prompt) {
+            let history = JSON.parse(localStorage.getItem('myrunjun_pro_history') || '[]');
+            history.unshift({ url, prompt });
+            if(history.length > 12) history.pop();
+            localStorage.setItem('myrunjun_pro_history', JSON.stringify(history));
+            displayHistory();
+        }
+
+        function displayHistory() {
+            const grid = document.getElementById('historyGrid');
+            const history = JSON.parse(localStorage.getItem('myrunjun_pro_history') || '[]');
+            grid.innerHTML = history.map(item => `
+                <div class="history-card glass rounded-xl overflow-hidden cursor-pointer" onclick="window.open('${item.url}')">
+                    <img src="${item.url}" class="w-full aspect-square object-cover opacity-80 hover:opacity-100 transition">
+                </div>
+            `).join('');
+        }
+
+        async function downloadImg() {
+            const img = document.getElementById('generatedImg');
+            const res = await fetch(img.src);
+            const blob = await res.blob();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `myrunjun-art-${Date.now()}.jpg`;
+            a.click();
+        }
+
+        function copyImgLink() {
+            const url = document.getElementById('generatedImg').src;
+            navigator.clipboard.writeText(url).then(() => {
+                alert("Image link copied to clipboard!");
+            }).catch(err => {
+                console.error('Link copy nahi ho saka', err);
+            });
+        }
+
+        function shareImg() {
+            const url = document.getElementById('generatedImg').src;
+            window.open(`https://wa.me/?text=Check out this AI image I created on My Runjun Art: ${encodeURIComponent(url)}`);
+        }
+    </script>
+</body>
+</html>
