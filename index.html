@@ -68,7 +68,6 @@
             
             <div id="actionBtns" class="mt-6 flex gap-4 hidden z-10">
                 <button onclick="downloadImg()" class="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-xl font-bold transition">Download</button>
-                <button onclick="copyImgLink()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-xl font-bold transition">Copy Link</button>
                 <button onclick="shareImg()" class="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-xl font-bold transition">Share</button>
             </div>
         </section>
@@ -157,15 +156,6 @@
             a.href = URL.createObjectURL(blob);
             a.download = `myrunjun-art-${Date.now()}.jpg`;
             a.click();
-        }
-
-        function copyImgLink() {
-            const url = document.getElementById('generatedImg').src;
-            navigator.clipboard.writeText(url).then(() => {
-                alert("Image link copied to clipboard!");
-            }).catch(err => {
-                console.error('Link copy nahi ho saka', err);
-            });
         }
 
         function shareImg() {
